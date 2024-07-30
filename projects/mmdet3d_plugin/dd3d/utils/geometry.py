@@ -11,6 +11,7 @@ LOG = logging.getLogger(__name__)
 PI = 3.14159265358979323846
 EPS = 1e-7
 
+
 def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     """
     Returns torch.sqrt(torch.max(0, x))
@@ -20,6 +21,7 @@ def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     positive_mask = x > 0
     ret[positive_mask] = torch.sqrt(x[positive_mask])
     return ret
+
 
 def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     """
@@ -35,9 +37,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(
-        matrix.reshape(batch_dim + (9,)), dim=-1
-    )
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -70,9 +70,10 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     # if not for numerical problems, quat_candidates[i] should be same (up to a sign),
     # forall i; we pick the best-conditioned one (with the largest denominator)
 
-    return quat_candidates[
-        F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :  # pyre-ignore[16]
-    ].reshape(batch_dim + (4,))
+    return quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(  # pyre-ignore[16]
+        batch_dim + (4,)
+    )
+
 
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """
@@ -104,6 +105,7 @@ def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     )
     return o.reshape(quaternions.shape[:-1] + (3, 3))
 
+
 def allocentric_to_egocentric(quat, proj_ctr, inv_intrinsics):
     """
     Parameters
@@ -124,7 +126,7 @@ def allocentric_to_egocentric(quat, proj_ctr, inv_intrinsics):
     z = ray / ray.norm(dim=1, keepdim=True)
 
     # gram-schmit process: local_y = global_y - global_y \dot local_z
-    y = z.new_tensor([[0., 1., 0.]]) - z[:, 1:2] * z
+    y = z.new_tensor([[0.0, 1.0, 0.0]]) - z[:, 1:2] * z
     y = y / y.norm(dim=1, keepdim=True)
     x = torch.cross(y, z, dim=1)
 
@@ -138,7 +140,7 @@ def allocentric_to_egocentric(quat, proj_ctr, inv_intrinsics):
 
     # Make sure it's unit norm.
     quat_norm = egocentric_quat.norm(dim=1, keepdim=True)
-    if not torch.allclose(quat_norm, torch.as_tensor(1.), atol=1e-3):
+    if not torch.allclose(quat_norm, torch.as_tensor(1.0), atol=1e-3):
         LOG.warning(
             f"Some of the input quaternions are not unit norm: min={quat_norm.min()}, max={quat_norm.max()}; therefore normalizing."
         )
@@ -162,7 +164,7 @@ def homogenize_points(xy):
         E.g, (N, 3) or (N, K, 3) or (N, H, W, 3).
     """
     # NOTE: this seems to work for arbitrary number of dimensions of input
-    pad = torch.nn.ConstantPad1d(padding=(0, 1), value=1.)
+    pad = torch.nn.ConstantPad1d(padding=(0, 1), value=1.0)
     return pad(xy)
 
 

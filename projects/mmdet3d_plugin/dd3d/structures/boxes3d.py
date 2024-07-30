@@ -6,6 +6,7 @@ from torch.cuda import amp
 
 from projects.mmdet3d_plugin.dd3d.utils.geometry import unproject_points2d
 import projects.mmdet3d_plugin.dd3d.structures.transform3d as t3d
+
 # yapf: disable
 BOX3D_CORNER_MAPPING = [
     [1, 1, 1, 1, -1, -1, -1, -1],
@@ -13,6 +14,7 @@ BOX3D_CORNER_MAPPING = [
     [1, 1, -1, -1, 1, 1, -1, -1]
 ]
 # yapf: enable
+
 
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """
@@ -44,6 +46,7 @@ def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     )
     return o.reshape(quaternions.shape[:-1] + (3, 3))
 
+
 def _to_tensor(x, dim):
     if isinstance(x, torch.Tensor):
         x = x.to(torch.float32)
@@ -61,7 +64,7 @@ def _to_tensor(x, dim):
     return x
 
 
-class GenericBoxes3D():
+class GenericBoxes3D:
     def __init__(self, quat, tvec, size):
         self.quat = _to_tensor(quat, dim=4)
         self._tvec = _to_tensor(tvec, dim=3)
@@ -147,8 +150,7 @@ class GenericBoxes3D():
         return [GenericBoxes3D(*x) for x in zip(quat_list, tvec_list, size_list)]
 
     def __getitem__(self, item):
-        """
-        """
+        """ """
         if isinstance(item, int):
             return GenericBoxes3D(self.quat[item].view(1, -1), self.tvec[item].view(1, -1), self.size[item].view(1, -1))
 
@@ -167,8 +169,7 @@ class GenericBoxes3D():
         return self.quat.shape[0]
 
     def clone(self):
-        """
-        """
+        """ """
         return GenericBoxes3D(self.quat.clone(), self.tvec.clone(), self.size.clone())
 
     def vectorize(self):
@@ -191,6 +192,7 @@ class Boxes3D(GenericBoxes3D):
 
     The tvec is computed from projected center, depth, and intrinsics.
     """
+
     def __init__(self, quat, proj_ctr, depth, size, inv_intrinsics):
         self.quat = quat
         self.proj_ctr = proj_ctr
@@ -278,12 +280,14 @@ class Boxes3D(GenericBoxes3D):
         return [Boxes3D(*x) for x in zip(quat_list, proj_ctr_list, depth_list, size_list, inv_K_list)]
 
     def __getitem__(self, item):
-        """
-        """
+        """ """
         if isinstance(item, int):
             return Boxes3D(
-                self.quat[item].view(1, -1), self.proj_ctr[item].view(1, -1), self.depth[item].view(1, -1),
-                self.size[item].view(1, -1), self.inv_intrinsics[item].view(1, 3, 3)
+                self.quat[item].view(1, -1),
+                self.proj_ctr[item].view(1, -1),
+                self.depth[item].view(1, -1),
+                self.size[item].view(1, -1),
+                self.inv_intrinsics[item].view(1, 3, 3),
             )
 
         quat = self.quat[item]
@@ -306,8 +310,7 @@ class Boxes3D(GenericBoxes3D):
         return self.quat.shape[0]
 
     def clone(self):
-        """
-        """
+        """ """
         return Boxes3D(
             self.quat.clone(), self.proj_ctr.clone(), self.depth.clone(), self.size.clone(), self.inv_intrinsics.clone()
         )

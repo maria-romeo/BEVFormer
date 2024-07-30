@@ -10,14 +10,13 @@ from PIL import Image, ImageDraw
 
 
 def fill_color_polygon(image, polygon, color, alpha=0.5):
-    """Color interior of polygon with alpha-blending. This function modified input in place.
-    """
-    _mask = Image.new('L', (image.shape[1], image.shape[0]), 0)
+    """Color interior of polygon with alpha-blending. This function modified input in place."""
+    _mask = Image.new("L", (image.shape[1], image.shape[0]), 0)
     ImageDraw.Draw(_mask).polygon(polygon, outline=1, fill=1)
     mask = np.array(_mask, np.bool)
     for c in range(3):
         channel = image[:, :, c]
-        channel[mask] = channel[mask] * (1. - alpha) + color[c] * alpha
+        channel[mask] = channel[mask] * (1.0 - alpha) + color[c] * alpha
 
 
 def change_color_brightness(color, brightness_factor):
@@ -78,12 +77,7 @@ def draw_text(ax, text, position, *, font_size, color="g", horizontal_alignment=
         text,
         size=font_size,
         family="sans-serif",
-        bbox={
-            "facecolor": "black",
-            "alpha": 0.8,
-            "pad": 0.7,
-            "edgecolor": "none"
-        },
+        bbox={"facecolor": "black", "alpha": 0.8, "pad": 0.7, "edgecolor": "none"},
         verticalalignment="top",
         horizontalalignment=horizontal_alignment,
         color=color,
@@ -94,9 +88,9 @@ def draw_text(ax, text, position, *, font_size, color="g", horizontal_alignment=
 
 
 def float_to_uint8_color(float_clr):
-    assert all([c >= 0. for c in float_clr])
-    assert all([c <= 1. for c in float_clr])
-    return [int(c * 255.) for c in float_clr]
+    assert all([c >= 0.0 for c in float_clr])
+    assert all([c <= 1.0 for c in float_clr])
+    return [int(c * 255.0) for c in float_clr]
 
 
 def mosaic(items, scale=1.0, pad=3, grid_width=None):
@@ -123,9 +117,9 @@ def mosaic(items, scale=1.0, pad=3, grid_width=None):
     """
     # Determine tile width and height
     N = len(items)
-    assert N > 0, 'No items to mosaic!'
+    assert N > 0, "No items to mosaic!"
     grid_width = grid_width if grid_width else np.ceil(np.sqrt(N)).astype(int)
-    grid_height = np.ceil(N * 1. / grid_width).astype(np.int)
+    grid_height = np.ceil(N * 1.0 / grid_width).astype(np.int)
     input_size = items[0].shape[:2]
     target_shape = (int(input_size[1] * scale), int(input_size[0] * scale))
     mosaic_items = []
@@ -141,7 +135,6 @@ def mosaic(items, scale=1.0, pad=3, grid_width=None):
     # Stack W tiles horizontally first, then vertically
     im_pad = lambda im: cv2.copyMakeBorder(im, pad, pad, pad, pad, cv2.BORDER_CONSTANT, 0)
     mosaic_items = [im_pad(im) for im in mosaic_items]
-    hstack = [np.hstack(mosaic_items[j:j + grid_width]) for j in range(0, len(mosaic_items), grid_width)]
-    mosaic_viz = np.vstack(hstack) if len(hstack) > 1 \
-        else hstack[0]
+    hstack = [np.hstack(mosaic_items[j : j + grid_width]) for j in range(0, len(mosaic_items), grid_width)]
+    mosaic_viz = np.vstack(hstack) if len(hstack) > 1 else hstack[0]
     return mosaic_viz

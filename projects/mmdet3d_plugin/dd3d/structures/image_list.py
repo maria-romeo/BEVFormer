@@ -42,6 +42,7 @@ class ImageList(object):
     Attributes:
         image_sizes (list[tuple[int, int]]): each tuple is (h, w)
     """
+
     def __init__(self, tensor: torch.Tensor, image_sizes: List[Tuple[int, int]], intrinsics=None, image_paths=None):
         """
         Arguments:
@@ -79,7 +80,7 @@ class ImageList(object):
             Tensor: an image of shape (H, W) or (C_1, ..., C_K, H, W) where K >= 1
         """
         size = self.image_sizes[idx]
-        return self.tensor[idx, ..., :size[0], :size[1]]
+        return self.tensor[idx, ..., : size[0], : size[1]]
 
     @torch.jit.unused
     def to(self, *args: Any, **kwargs: Any) -> "ImageList":
@@ -96,7 +97,7 @@ class ImageList(object):
         size_divisibility: int = 0,
         pad_value: float = 0.0,
         intrinsics=None,
-        image_paths=None
+        image_paths=None,
     ) -> "ImageList":
         """
         Args:
@@ -124,7 +125,7 @@ class ImageList(object):
         if size_divisibility > 1:
             stride = size_divisibility
             # the last two dims are H,W, both subject to divisibility requirement
-            max_size = torch.div(max_size + (stride - 1),  stride, rounding_mode='floor') * stride
+            max_size = torch.div(max_size + (stride - 1), stride, rounding_mode="floor") * stride
 
         # handle weirdness of scripting and tracing ...
         if torch.jit.is_scripting():
@@ -145,7 +146,7 @@ class ImageList(object):
             batch_shape = [len(tensors)] + list(tensors[0].shape[:-2]) + list(max_size)
             batched_imgs = tensors[0].new_full(batch_shape, pad_value)
             for img, pad_img in zip(tensors, batched_imgs):
-                pad_img[..., :img.shape[-2], :img.shape[-1]].copy_(img)
+                pad_img[..., : img.shape[-2], : img.shape[-1]].copy_(img)
 
         if intrinsics is not None:
             assert isinstance(intrinsics, (tuple, list))

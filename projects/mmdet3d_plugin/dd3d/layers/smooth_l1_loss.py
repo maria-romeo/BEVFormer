@@ -54,7 +54,7 @@ def smooth_l1_loss(input: torch.Tensor, target: torch.Tensor, beta: float, reduc
         implement Smooth L1 loss, nor does it implement Huber loss. It implements
         the special case of both in which they are equal (beta=1).
         See: https://pytorch.org/docs/stable/nn.html#torch.nn.SmoothL1Loss.
-     """
+    """
     # (dennis.park) Make it work with mixed precision training.
     beta = torch.as_tensor(beta).to(input.dtype)
     if beta < 1e-5:

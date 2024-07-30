@@ -10,23 +10,24 @@ from projects.mmdet3d_plugin.dd3d.utils.tasks import TaskManager
 
 @PIPELINES.register_module()
 class DD3DMapper:
-    def __init__(self,
-                 is_train: bool = True,
-                 tasks=dict(box2d_on=True, box3d_on=True),
-                 ):
+    def __init__(
+        self,
+        is_train: bool = True,
+        tasks=dict(box2d_on=True, box3d_on=True),
+    ):
         self.is_train = is_train
         self.task_manager = TaskManager(**tasks)
 
     def __call__(self, results):
-        if results['mono_input_dict'] is None:
+        if results["mono_input_dict"] is None:
             return results
         mono_input_dict = []
-        for dataset_dict in results['mono_input_dict']:
+        for dataset_dict in results["mono_input_dict"]:
             dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
-            image_shape = results['img'].data.shape[-2:]
+            image_shape = results["img"].data.shape[-2:]
             intrinsics = None
             if "intrinsics" in dataset_dict:
-                intrinsics = dataset_dict['intrinsics']
+                intrinsics = dataset_dict["intrinsics"]
                 if not torch.is_tensor(intrinsics):
                     intrinsics = np.reshape(
                         intrinsics,
@@ -35,18 +36,19 @@ class DD3DMapper:
                     intrinsics = torch.as_tensor(intrinsics)
                     # NOTE: intrinsics = transforms.apply_intrinsics(intrinsics)
                     dataset_dict["intrinsics"] = intrinsics
-                dataset_dict["inv_intrinsics"] = torch.linalg.inv(dataset_dict['intrinsics'])
+                dataset_dict["inv_intrinsics"] = torch.linalg.inv(dataset_dict["intrinsics"])
 
             if "pose" in dataset_dict:
-                pose = Pose(wxyz=np.float32(dataset_dict["pose"]["wxyz"]),
-                            tvec=np.float32(dataset_dict["pose"]["tvec"]))
+                pose = Pose(
+                    wxyz=np.float32(dataset_dict["pose"]["wxyz"]), tvec=np.float32(dataset_dict["pose"]["tvec"])
+                )
                 dataset_dict["pose"] = pose
                 # NOTE: no transforms affect global pose.
 
             if "extrinsics" in dataset_dict:
                 extrinsics = Pose(
                     wxyz=np.float32(dataset_dict["extrinsics"]["wxyz"]),
-                    tvec=np.float32(dataset_dict["extrinsics"]["tvec"])
+                    tvec=np.float32(dataset_dict["extrinsics"]["tvec"]),
                 )
                 dataset_dict["extrinsics"] = extrinsics
 
@@ -61,9 +63,9 @@ class DD3DMapper:
                     if not self.task_manager.box3d_on:
                         anno.pop("bbox3d", None)
                 annos = [anno for anno in dataset_dict["annotations"] if anno.get("iscrowd", 0) == 0]
-                if annos and 'bbox3d' in annos[0]:
+                if annos and "bbox3d" in annos[0]:
                     # Remove boxes with negative z-value for center.
-                    annos = [anno for anno in annos if anno['bbox3d'][6] > 0]
+                    annos = [anno for anno in annos if anno["bbox3d"][6] > 0]
 
                 instances = annotations_to_instances(
                     annos,
@@ -78,7 +80,7 @@ class DD3DMapper:
                     annos = [anno for tmp_m, anno in zip(m, annos) if tmp_m]
                 dataset_dict["instances"] = instances
 
-            dataset_dict['annotations'] = annos
+            dataset_dict["annotations"] = annos
 
             mono_input_dict.append(dataset_dict)
 
@@ -90,5 +92,5 @@ class DD3DMapper:
             return None
 
         mono_input_dict = DC(mono_input_dict, cpu_only=True)
-        results['mono_input_dict'] = mono_input_dict
+        results["mono_input_dict"] = mono_input_dict
         return results

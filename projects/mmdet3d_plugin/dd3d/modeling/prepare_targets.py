@@ -5,17 +5,13 @@ from detectron2.layers import cat
 
 from projects.mmdet3d_plugin.dd3d.structures.boxes3d import Boxes3D
 
-INF = 100000000.
+INF = 100000000.0
 
 
-class DD3DTargetPreparer():
-    def __init__(self, 
-                 num_classes, 
-                 input_shape,
-                 box3d_on=True,
-                 center_sample=True,
-                 pos_radius=1.5,
-                 sizes_of_interest=None):
+class DD3DTargetPreparer:
+    def __init__(
+        self, num_classes, input_shape, box3d_on=True, center_sample=True, pos_radius=1.5, sizes_of_interest=None
+    ):
         self.num_classes = num_classes
         self.center_sample = center_sample
         self.strides = [shape.stride for shape in input_shape]
@@ -78,7 +74,7 @@ class DD3DTargetPreparer():
             "target_inds": target_inds,
             "im_inds": im_inds,
             "fpn_levels": fpn_levels,
-            "pos_inds": pos_inds
+            "pos_inds": pos_inds,
         }
 
         if self.dd3d_enabled:
@@ -149,9 +145,9 @@ class DD3DTargetPreparer():
 
             max_reg_targets_per_im = box2d_reg_per_im.max(dim=2)[0]
             # limit the regression range for each location
-            is_cared_in_the_level = \
-                (max_reg_targets_per_im >= size_ranges[:, [0]]) & \
-                (max_reg_targets_per_im <= size_ranges[:, [1]])
+            is_cared_in_the_level = (max_reg_targets_per_im >= size_ranges[:, [0]]) & (
+                max_reg_targets_per_im <= size_ranges[:, [1]]
+            )
 
             locations_to_gt_area = area[None].repeat(len(locations), 1)
             locations_to_gt_area[is_in_boxes == 0] = INF
@@ -219,10 +215,10 @@ class DD3DTargetPreparer():
         return inside_gt_bbox_mask
 
     def _transpose(self, training_targets, num_loc_list):
-        '''
+        """
         This function is used to transpose image first training targets to level first ones
         :return: level first training targets
-        '''
+        """
         if isinstance(training_targets[0], Boxes3D):
             for im_i in range(len(training_targets)):
                 # training_targets[im_i] = torch.split(training_targets[im_i], num_loc_list, dim=0)
