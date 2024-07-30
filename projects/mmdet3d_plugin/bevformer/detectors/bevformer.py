@@ -213,13 +213,23 @@ class BEVFormer(MVXTwoStageDetector):
         Returns:
             dict: Losses of different branches.
         """
+        ### MODIFIED to reproduce static bevformer: https://github.com/fundamentalvision/BEVFormer/issues/53
 
-        len_queue = img.size(1)
-        prev_img = img[:, :-1, ...]
-        img = img[:, -1, ...]
+        if self.video_test_mode == False:
+            len_queue = img.size(1)
+            # prev_img = img[:, :-1, ...]
+            img = img[:, -1, ...]
 
-        prev_img_metas = copy.deepcopy(img_metas)
-        prev_bev = self.obtain_history_bev(prev_img, prev_img_metas)
+            # prev_img_metas = copy.deepcopy(img_metas)
+            # prev_bev = self.obtain_history_bev(prev_img, prev_img_metas)
+            prev_bev = None
+        else:
+            len_queue = img.size(1)
+            prev_img = img[:, :-1, ...]
+            img = img[:, -1, ...]
+
+            prev_img_metas = copy.deepcopy(img_metas)
+            prev_bev = self.obtain_history_bev(prev_img, prev_img_metas)
 
         img_metas = [each[len_queue - 1] for each in img_metas]
         if not img_metas[0]["prev_bev_exists"]:
